@@ -25,7 +25,9 @@ function Invoke-GitHub([string]$Method, [string]$Path, $Body = $null) {
         $arguments.ContentType = 'application/json; charset=utf-8'
         $arguments.Body = $Body | ConvertTo-Json -Depth 8 -Compress
     }
-    Invoke-RestMethod @arguments
+    # REST arrays are emitted as one pipeline object; enumerate them for callers.
+    $response = Invoke-RestMethod @arguments
+    $response
 }
 
 function Get-HttpStatus($Failure) {
