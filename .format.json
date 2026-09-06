@@ -1,0 +1,21 @@
+{
+  "versions": {
+    "stylua": "2.3.1",
+    "prettier": "3.6.2",
+    "PSScriptAnalyzer": "1.24.0"
+  },
+  "files": {
+    "lua": ["src/lua/capacity.lua", "src/lua/main.lua"],
+    "cpp": [],
+    "prettier": [
+      "README.md",
+      "src/definitions/SetWeightLimit.json",
+      ".prettierrc.json",
+      ".format.json",
+      "AGENTS.md"
+    ],
+    "powershell": ["package.ps1", "PowerShellFormatting.psd1", "format.ps1"],
+    "cmake": [],
+    "text": [".gitignore", ".editorconfig", ".gitattributes", ".stylua.toml"]
+  }
+}

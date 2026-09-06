@@ -3,15 +3,22 @@
   "display_name": "Set Weight Limit",
   "settings": [
     {
-      "id": "enabled", "type": "boolean", "label": "Enable",
+      "id": "enabled",
+      "type": "boolean",
+      "label": "Enable",
       "description": "Override base carry capacity. Disabling restores the original base when this mod still owns it.",
       "default": true
     },
     {
-      "id": "weight_limit", "type": "number", "label": "Weight Limit",
+      "id": "weight_limit",
+      "type": "number",
+      "label": "Weight Limit",
       "description": "Base carry capacity. Trait bonuses are added separately. Changes last for this game session.",
-      "default": 400, "min": 20, "max": 2000, "step": 20,
-      "enabled_when": {"setting": "enabled", "equals": true}
+      "default": 400,
+      "min": 20,
+      "max": 2000,
+      "step": 20,
+      "enabled_when": { "setting": "enabled", "equals": true }
     }
   ]
 }

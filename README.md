@@ -17,9 +17,9 @@ The archive installs the Lua mod and its declaration at `ue4ss/Mods/ModSettings/
 
 Open **Settings → Mods → Set Weight Limit** from the title screen or pause menu.
 
-| Control | Behavior |
-| --- | --- |
-| **Enable** | On by default. Turns the capacity override on or off. |
+| Control          | Behavior                                                                          |
+| ---------------- | --------------------------------------------------------------------------------- |
+| **Enable**       | On by default. Turns the capacity override on or off.                             |
 | **Weight Limit** | Sets base capacity. Disabled while Enable is off; its selected value is retained. |
 
 Disabling restores the recorded original base only if no external change has replaced the value managed by SetWeightLimit. Re-enabling reapplies the selected weight through the same safeguards.
@@ -56,11 +56,11 @@ Diagnostic testing verified title-screen and pause-menu controls, reopening, ses
 
 The source layout separates implementation from installed paths:
 
-| Source | Responsibility |
-| --- | --- |
-| [src/lua/main.lua](src/lua/main.lua) | Connects to ModSettings, subscribes to changes and handles the UE4SS/player lifecycle. |
-| [src/lua/capacity.lua](src/lua/capacity.lua) | Validates requested capacity values and manages safe application, ownership, restoration and rollback. |
-| [src/definitions/SetWeightLimit.json](src/definitions/SetWeightLimit.json) | Declares controls, defaults, numeric bounds and the Enable dependency. |
+| Source                                                                     | Responsibility                                                                                         |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| [src/lua/main.lua](src/lua/main.lua)                                       | Connects to ModSettings, subscribes to changes and handles the UE4SS/player lifecycle.                 |
+| [src/lua/capacity.lua](src/lua/capacity.lua)                               | Validates requested capacity values and manages safe application, ownership, restoration and rollback. |
+| [src/definitions/SetWeightLimit.json](src/definitions/SetWeightLimit.json) | Declares controls, defaults, numeric bounds and the Enable dependency.                                 |
 
 Run `.\package.ps1` to create `dist/SetWeightLimit-0.3.0.zip`. The explicit four-file allowlist maps the Lua files and declaration to their installation paths and generates an empty activation file. The README is not included in the archive. Packaging does not install the mod or launch the game.
 
