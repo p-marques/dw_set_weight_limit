@@ -1,4 +1,4 @@
-# SetWeightLimit 0.2.0
+# SetWeightLimit 0.3.0
 
 Set your character's **base carry capacity** through **Settings → Mods → Set Weight Limit**. The default is **400**, adjustable from **20–2000** in steps of **20**. Trait bonuses are added separately: a base of 400 with a 90-point bonus gives a total capacity of 490.
 
@@ -8,8 +8,8 @@ Settings last for the current game session. Restarting the game restores the dec
 
 1. Install community **RC5 UE4SS** and [**ModSettings 0.1.0**](https://github.com/p-marques/dawnwalker_mod_settings). Both framework components, **ModSettings** and **ModSettingsBridge**, are required.
 2. Disable other carry-capacity mods, including CarryWeightMultiplier and mods that replace the player Blueprint to change capacity.
-3. Close the game and extract `SetWeightLimit-0.2.0.zip` beside `Dawnwalker.exe`, normally in `Dawnwalker/Binaries/Win64`.
-4. If upgrading from 0.1.0, remove `ue4ss/Mods/SetWeightLimit/scripts/config.lua`. Version 0.2.0 never reads this obsolete file.
+3. Close the game and extract `SetWeightLimit-0.3.0.zip` beside `Dawnwalker.exe`, normally in `Dawnwalker/Binaries/Win64`.
+4. If upgrading from 0.1.0, remove `ue4ss/Mods/SetWeightLimit/scripts/config.lua`. Version 0.3.0 never reads this obsolete file.
 
 The archive installs the Lua mod and its declaration at `ue4ss/Mods/ModSettings/definitions/SetWeightLimit.json`. It includes no UE4SS binaries or shared mod lists. If ModSettings is unavailable or the declaration is missing or invalid, SetWeightLimit logs an error and makes no capacity changes.
 
@@ -46,7 +46,7 @@ Leave ModSettings and ModSettingsBridge installed for other mods that need them.
 
 ## Compatibility and safeguards
 
-Targets game build **25129649**, Unreal Engine **5.5.4**, with community **RC5**. Unexpected existing capacity values are left unchanged. If another system changes a capacity value that SetWeightLimit manages, the mod stops managing that component instead of overwriting the external change.
+Targets game build **25129649**, Unreal Engine **5.5.4**, with community **RC5**. The mod resolves a unique `WeightLimit` FloatProperty by name through the component class hierarchy, without requiring a fixed memory offset. This tolerates property layout changes, but changes to its gameplay meaning or other game interfaces can still require an update. Unexpected existing capacity values are left unchanged. If another system changes a capacity value that SetWeightLimit manages, the mod stops managing that component instead of overwriting the external change.
 
 Capacity changes are checked against the game's reported result. Restoration and rollback require continued ownership of the value. A requested setting can therefore differ from the successfully applied capacity; application failures appear in the UE4SS log.
 
@@ -62,6 +62,6 @@ The source layout separates implementation from installed paths:
 | [src/lua/capacity.lua](src/lua/capacity.lua) | Validates requested capacity values and manages safe application, ownership, restoration and rollback. |
 | [src/definitions/SetWeightLimit.json](src/definitions/SetWeightLimit.json) | Declares controls, defaults, numeric bounds and the Enable dependency. |
 
-Run `.\package.ps1` to create `dist/SetWeightLimit-0.2.0.zip`. The explicit four-file allowlist maps the Lua files and declaration to their installation paths and generates an empty activation file. The README is not included in the archive. Packaging does not install the mod or launch the game.
+Run `.\package.ps1` to create `dist/SetWeightLimit-0.3.0.zip`. The explicit four-file allowlist maps the Lua files and declaration to their installation paths and generates an empty activation file. The README is not included in the archive. Packaging does not install the mod or launch the game.
 
 Generated output in `.build` and `dist` is ignored by Git. Tests, captures and diagnostic tools remain outside this repository.

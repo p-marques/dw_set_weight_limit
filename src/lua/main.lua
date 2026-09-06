@@ -40,12 +40,14 @@ local function read(c)
         class:ForEachProperty(function(property)
             if property:GetFName():ToString()=='WeightLimit' then
                 count=count+1
-                compatible=property:GetClass():GetFName():ToString()=='FloatProperty' and property:GetOffset_Internal()==0x158
+                compatible=property:GetClass():GetFName():ToString()=='FloatProperty'
             end
         end)
         class=class:GetSuperStruct()
     end
-    assert(count==1 and compatible,'Expected exactly one WeightLimit FloatProperty at 0x158')
+    assert(count>0,'WeightLimit property not found in component class hierarchy')
+    assert(count==1,'Ambiguous WeightLimit property: multiple matches in component class hierarchy')
+    assert(compatible,'Expected WeightLimit property to be a FloatProperty')
     return c:GetPropertyValue('WeightLimit')
 end
 local state=Capacity.new({eligible=eligible,read=read,
