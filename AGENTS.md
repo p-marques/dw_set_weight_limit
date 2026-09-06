@@ -6,3 +6,5 @@
 - Keep tools and validation artifacts outside this repository in the diagnostic workspace. Ask before installing tools; never install globally or change persistent PATH.
 - Packaging uses its explicit release allowlist and does not install or invoke formatters.
 - No game launch, deployment, commit or push is implied by a formatting request.
+
+- Behavior changes require a version bump. Assess major, minor or patch case by case; do not automatically use one level for every change. Documentation/tooling-only changes do not inherently require a runtime version bump.

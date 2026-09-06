@@ -12,14 +12,27 @@ local function problem(s)
         log("Further errors suppressed.")
     end
 end
-if type(ModSettings) ~= "table" or ModSettings.api_version ~= 1 then
-    problem("ModSettings v1 is required; no capacity writes.")
-    return
-end
-local settings, err = ModSettings.connect("SetWeightLimit")
-if not settings then
-    problem(err)
-    return
+local settings, local_config
+if ModSettings == nil then
+    log("Settings source: config.lua (ModSettings API absent).")
+    local loaded, result = pcall(require, "config")
+    if not loaded or type(result) ~= "table" then
+        problem("Cannot load config.lua: " .. tostring(result) .. "; no capacity writes.")
+        return
+    end
+    local_config = result
+else
+    log("Settings source: ModSettings; config.lua ignored.")
+    if type(ModSettings) ~= "table" or ModSettings.api_version ~= 1 or type(ModSettings.connect) ~= "function" then
+        problem("Incompatible ModSettings API; no capacity writes.")
+        return
+    end
+    local connected, result, err = pcall(ModSettings.connect, "SetWeightLimit")
+    if not connected or not result then
+        problem(err or result or "ModSettings connection failed")
+        return
+    end
+    settings = result
 end
 local UEHelpers = require("UEHelpers")
 local Capacity = require("capacity")
@@ -99,7 +112,24 @@ local state = Capacity.new({
         log(string.format("Applied base=%g; total=%g; enabled=%s.", base, total, tostring(enabled)))
     end,
 })
-local ok, why = state:configure(settings:get("enabled"), settings:get("weight_limit"))
+local function configure()
+    local read_ok, enabled, weight = pcall(function()
+        if not settings then
+            return local_config.enabled, local_config.weight_limit
+        end
+        local enabled, enabled_err = settings:get("enabled")
+        local weight, weight_err = settings:get("weight_limit")
+        if enabled == nil or weight == nil then
+            error(enabled_err or weight_err or "ModSettings initial/current value unavailable")
+        end
+        return enabled, weight
+    end)
+    if not read_ok then
+        return false, enabled
+    end
+    return state:configure(enabled, weight)
+end
+local ok, why = configure()
 if not ok then
     problem(why)
     return
@@ -141,7 +171,7 @@ local function schedule(c)
     attempt()
 end
 local function change()
-    local accepted, reason = state:configure(settings:get("enabled"), settings:get("weight_limit"))
+    local accepted, reason = configure()
     if not accepted then
         problem(reason)
         return
@@ -159,17 +189,27 @@ local function change()
         end)
     end)
 end
-local unsub_enabled, e1 = settings:subscribe("enabled", change)
-local unsub_weight, e2 = settings:subscribe("weight_limit", change)
-if not unsub_enabled or not unsub_weight then
-    if unsub_enabled then
-        unsub_enabled()
+if settings then
+    local subscriptions = {}
+    local subscribed, subscribe_err = pcall(function()
+        for _, id in ipairs({ "enabled", "weight_limit" }) do
+            local unsubscribe, err = settings:subscribe(id, change)
+            if type(unsubscribe) ~= "function" then
+                error(err or "ModSettings subscription failed")
+            end
+            subscriptions[#subscriptions + 1] = unsubscribe
+        end
+    end)
+    if not subscribed then
+        for _, unsubscribe in ipairs(subscriptions) do
+            local cleaned, cleanup_err = pcall(unsubscribe)
+            if not cleaned then
+                problem(cleanup_err)
+            end
+        end
+        problem(subscribe_err)
+        return
     end
-    if unsub_weight then
-        unsub_weight()
-    end
-    problem(e1 or e2 or "subscription failed")
-    return
 end
 local notified, notify_err = pcall(NotifyOnNewObject, "/Script/DogwoodInventory.InventoryComponent", function(c)
     guarded(function()
@@ -217,4 +257,10 @@ ExecuteInGameThreadWithDelay(5000, function()
         end
     end)
 end)
-log(string.format("Ready; enabled=%s; base=%g; values are session-only.", tostring(state.enabled), state.target))
+log(
+    string.format(
+        "Ready; enabled=%s; base=%g; settings source fixed until restart.",
+        tostring(state.enabled),
+        state.target
+    )
+)

@@ -4,6 +4,7 @@ $ErrorActionPreference = 'Stop'
 $files = [ordered]@{
     'SetWeightLimit/enabled.txt'                  =$null
     'SetWeightLimit/scripts/main.lua'             ='src/lua/main.lua'
+    'SetWeightLimit/scripts/config.lua'           ='src/lua/config.lua'
     'SetWeightLimit/scripts/capacity.lua'         ='src/lua/capacity.lua'
     'ModSettings/definitions/SetWeightLimit.json' ='src/definitions/SetWeightLimit.json'
 }
@@ -15,7 +16,7 @@ Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $dist = Join-Path $PSScriptRoot 'dist'
 New-Item -ItemType Directory -Path $dist -Force | Out-Null
-$archive = Join-Path $dist 'SetWeightLimit-0.3.0.zip'
+$archive = Join-Path $dist 'SetWeightLimit-0.4.0.zip'
 $stream = [IO.File]::Open($archive, [IO.FileMode]::Create, [IO.FileAccess]::Write)
 $zip = $null
 try {

@@ -1,21 +1,30 @@
-# SetWeightLimit 0.3.0
+# SetWeightLimit 0.4.0
 
-Set your character's **base carry capacity** through **Settings → Mods → Set Weight Limit**. The default is **400**, adjustable from **20–2000** in steps of **20**. Trait bonuses are added separately: a base of 400 with a 90-point bonus gives a total capacity of 490.
+Set your character's **base carry capacity**, defaulting to **400**. Trait bonuses are added separately: a base of 400 with a 90-point bonus gives a total capacity of 490.
 
-Settings last for the current game session. Restarting the game restores the declaration defaults; in-game changes are not saved between sessions.
+Works with community RC5 UE4SS on its own, using `config.lua`. Optionally install ModSettings to change capacity live through **Settings → Mods → Set Weight Limit**, with a slider from **20–2000** in steps of **20**.
+
+## Settings source
+
+The source is selected once at startup:
+
+- If the ModSettings API is absent, SetWeightLimit reads local `config.lua`. This includes an API that is unavailable because its declaration was missing or rejected.
+- If the API exists, local config is completely ignored. ModSettings supplies startup defaults and live changes. An incompatible API or failed connection, read or subscription logs an error rather than switching to local config.
+
+Restart after editing configuration, declarations or the installed framework. There is no automatic switching during a running session. ModSettings values last only for the session; restarting restores its declaration defaults.
 
 ## Installation and upgrades
 
-1. Install community **RC5 UE4SS** and [**ModSettings 0.1.0**](https://github.com/p-marques/dawnwalker_mod_settings). Both framework components, **ModSettings** and **ModSettingsBridge**, are required.
+1. Install community **RC5 UE4SS**. For optional in-game controls, also install [**ModSettings 0.1.0**](https://github.com/p-marques/dawnwalker_mod_settings), including both **ModSettings** and **ModSettingsBridge**.
 2. Disable other carry-capacity mods, including CarryWeightMultiplier and mods that replace the player Blueprint to change capacity.
-3. Close the game and extract `SetWeightLimit-0.3.0.zip` beside `Dawnwalker.exe`, normally in `Dawnwalker/Binaries/Win64`.
-4. If upgrading from 0.1.0, remove `ue4ss/Mods/SetWeightLimit/scripts/config.lua`. Version 0.3.0 never reads this obsolete file.
+3. Close the game and extract `SetWeightLimit-0.4.0.zip` beside `Dawnwalker.exe`, normally in `Dawnwalker/Binaries/Win64`.
+4. Version 0.4.0 includes `scripts/config.lua` again. Keep this file for standalone operation. Back up any local edits before extracting an update, which may overwrite its defaults.
 
-The archive installs the Lua mod and its declaration at `ue4ss/Mods/ModSettings/definitions/SetWeightLimit.json`. It includes no UE4SS binaries or shared mod lists. If ModSettings is unavailable or the declaration is missing or invalid, SetWeightLimit logs an error and makes no capacity changes.
+The archive installs the Lua mod and its declaration at `ue4ss/Mods/ModSettings/definitions/SetWeightLimit.json`. It includes no UE4SS binaries or shared mod lists. The declaration alone does not install ModSettings or its native bridge. Without its API, local config is used. Invalid or unreadable local config produces a logged error and no capacity writes.
 
 ## Using the controls
 
-Open **Settings → Mods → Set Weight Limit** from the title screen or pause menu.
+With the optional framework installed, open **Settings → Mods → Set Weight Limit** from the title screen or pause menu. Standalone operation does not add a settings menu.
 
 | Control          | Behavior                                                                          |
 | ---------------- | --------------------------------------------------------------------------------- |
@@ -28,7 +37,18 @@ Changes made at the title screen apply when your character becomes available. Cl
 
 ## Changing startup defaults
 
-With the game closed, edit `ue4ss/Mods/ModSettings/definitions/SetWeightLimit.json`:
+For standalone operation, close the game and edit `ue4ss/Mods/SetWeightLimit/scripts/config.lua`:
+
+```lua
+return {
+    enabled = true,
+    weight_limit = 400,
+}
+```
+
+`enabled` must be a boolean. `weight_limit` must be a positive finite number that remains positive and finite when stored as float32; it may be rounded to that representation. The local file is not restricted to the menu's range or step grid. Both fields must be valid, including when disabled. Restart to apply edits. Setting `enabled = false` prevents the override on that run.
+
+When using ModSettings, edit `ue4ss/Mods/ModSettings/definitions/SetWeightLimit.json` instead:
 
 - In the setting with `"id": "enabled"`, set `"default"` to `true` or `false` without quotes.
 - In the setting with `"id": "weight_limit"`, set `"default"` to a number from **20 to 2000**, in multiples of **20**, such as `400` or `600`.
@@ -50,7 +70,7 @@ Targets game build **25129649**, Unreal Engine **5.5.4**, with community **RC5**
 
 Capacity changes are checked against the game's reported result. Restoration and rollback require continued ownership of the value. A requested setting can therefore differ from the successfully applied capacity; application failures appear in the UE4SS log.
 
-Diagnostic testing verified title-screen and pause-menu controls, reopening, session retention, and live capacity changes, including disabling and re-enabling. Additive-bonus arithmetic passed offline checks, but no nonzero trait bonus was observed during live testing. Controller input remains untested.
+Version 0.4.0 testing confirmed standalone capacity 400 from local config and live ModSettings changes, including 600 → disabled/200 → re-enabled/600. Earlier integration testing verified title-screen and pause-menu controls, reopening and session retention. Additive-bonus arithmetic passed offline checks, but no nonzero trait bonus was observed during live testing. Controller input remains untested.
 
 ## Development and packaging
 
@@ -58,10 +78,11 @@ The source layout separates implementation from installed paths:
 
 | Source                                                                     | Responsibility                                                                                         |
 | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| [src/lua/main.lua](src/lua/main.lua)                                       | Connects to ModSettings, subscribes to changes and handles the UE4SS/player lifecycle.                 |
+| [src/lua/main.lua](src/lua/main.lua)                                       | Selects local config or ModSettings, subscribes when available and handles the UE4SS/player lifecycle. |
 | [src/lua/capacity.lua](src/lua/capacity.lua)                               | Validates requested capacity values and manages safe application, ownership, restoration and rollback. |
 | [src/definitions/SetWeightLimit.json](src/definitions/SetWeightLimit.json) | Declares controls, defaults, numeric bounds and the Enable dependency.                                 |
+| [src/lua/config.lua](src/lua/config.lua)                                   | Standalone startup defaults; ignored when the ModSettings API is present.                              |
 
-Run `.\package.ps1` to create `dist/SetWeightLimit-0.3.0.zip`. The explicit four-file allowlist maps the Lua files and declaration to their installation paths and generates an empty activation file. The README is not included in the archive. Packaging does not install the mod or launch the game.
+Run `.\package.ps1` to create `dist/SetWeightLimit-0.4.0.zip`. The explicit five-file allowlist maps the three Lua files and declaration to their installation paths and generates an empty activation file. The README is not included in the archive. Packaging does not install the mod or launch the game.
 
 Generated output in `.build` and `dist` is ignored by Git. Tests, captures and diagnostic tools remain outside this repository.

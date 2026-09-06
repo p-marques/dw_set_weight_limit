@@ -5,7 +5,7 @@
     "PSScriptAnalyzer": "1.24.0"
   },
   "files": {
-    "lua": ["src/lua/capacity.lua", "src/lua/main.lua"],
+    "lua": ["src/lua/capacity.lua", "src/lua/main.lua", "src/lua/config.lua"],
     "cpp": [],
     "prettier": [
       "README.md",
