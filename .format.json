@@ -12,10 +12,23 @@
       "src/definitions/SetWeightLimit.json",
       ".prettierrc.json",
       ".format.json",
-      "AGENTS.md"
+      "AGENTS.md",
+      ".github/workflows/release.yml"
     ],
-    "powershell": ["package.ps1", "PowerShellFormatting.psd1", "format.ps1"],
+    "powershell": [
+      "package.ps1",
+      "PowerShellFormatting.psd1",
+      "format.ps1",
+      "version.ps1",
+      "release.ps1"
+    ],
     "cmake": [],
-    "text": [".gitignore", ".editorconfig", ".gitattributes", ".stylua.toml"]
+    "text": [
+      ".gitignore",
+      ".editorconfig",
+      ".gitattributes",
+      ".stylua.toml",
+      "VERSION"
+    ]
   }
 }

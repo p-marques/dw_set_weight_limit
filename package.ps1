@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param()
 $ErrorActionPreference = 'Stop'
+$version = & (Join-Path $PSScriptRoot 'version.ps1')
 $files = [ordered]@{
     'SetWeightLimit/enabled.txt'                  =$null
     'SetWeightLimit/scripts/main.lua'             ='src/lua/main.lua'
@@ -16,7 +17,7 @@ Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $dist = Join-Path $PSScriptRoot 'dist'
 New-Item -ItemType Directory -Path $dist -Force | Out-Null
-$archive = Join-Path $dist 'SetWeightLimit-0.4.0.zip'
+$archive = Join-Path $dist "SetWeightLimit-$version.zip"
 $stream = [IO.File]::Open($archive, [IO.FileMode]::Create, [IO.FileAccess]::Write)
 $zip = $null
 try {

@@ -1,4 +1,4 @@
-# SetWeightLimit 0.4.0
+# SetWeightLimit
 
 Set your character's **base carry capacity**, defaulting to **400**. Trait bonuses are added separately: a base of 400 with a 90-point bonus gives a total capacity of 490.
 
@@ -15,10 +15,10 @@ Restart after editing configuration, declarations or the installed framework. Th
 
 ## Installation and upgrades
 
-1. Install community **RC5 UE4SS**. For optional in-game controls, also install [**ModSettings 0.1.0**](https://github.com/p-marques/dawnwalker_mod_settings), including both **ModSettings** and **ModSettingsBridge**.
+1. Install community **RC5 UE4SS**. For optional in-game controls, also install both **ModSettings** and **ModSettingsBridge**.
 2. Disable other carry-capacity mods, including CarryWeightMultiplier and mods that replace the player Blueprint to change capacity.
-3. Close the game and extract `SetWeightLimit-0.4.0.zip` beside `Dawnwalker.exe`, normally in `Dawnwalker/Binaries/Win64`.
-4. Version 0.4.0 includes `scripts/config.lua` again. Keep this file for standalone operation. Back up any local edits before extracting an update, which may overwrite its defaults.
+3. Close the game and extract `SetWeightLimit-<version>.zip` beside `Dawnwalker.exe`, normally in `Dawnwalker/Binaries/Win64`.
+4. Keep the included `scripts/config.lua` for standalone operation. Back up any local edits before extracting an update, which may overwrite its defaults.
 
 The archive installs the Lua mod and its declaration at `ue4ss/Mods/ModSettings/definitions/SetWeightLimit.json`. It includes no UE4SS binaries or shared mod lists. The declaration alone does not install ModSettings or its native bridge. Without its API, local config is used. Invalid or unreadable local config produces a logged error and no capacity writes.
 
@@ -70,7 +70,7 @@ Targets game build **25129649**, Unreal Engine **5.5.4**, with community **RC5**
 
 Capacity changes are checked against the game's reported result. Restoration and rollback require continued ownership of the value. A requested setting can therefore differ from the successfully applied capacity; application failures appear in the UE4SS log.
 
-Version 0.4.0 testing confirmed standalone capacity 400 from local config and live ModSettings changes, including 600 → disabled/200 → re-enabled/600. Earlier integration testing verified title-screen and pause-menu controls, reopening and session retention. Additive-bonus arithmetic passed offline checks, but no nonzero trait bonus was observed during live testing. Controller input remains untested.
+Integration was **tested with ModSettings 0.1.0**; this identifies the tested version, not an exact-version requirement. Testing confirmed standalone capacity 400 from local config and live ModSettings changes, including 600 → disabled/200 → re-enabled/600. Integration testing also verified title-screen and pause-menu controls, reopening and session retention. Additive-bonus arithmetic passed offline checks, but no nonzero trait bonus was observed during live testing. Controller input remains untested.
 
 ## Development and packaging
 
@@ -83,6 +83,16 @@ The source layout separates implementation from installed paths:
 | [src/definitions/SetWeightLimit.json](src/definitions/SetWeightLimit.json) | Declares controls, defaults, numeric bounds and the Enable dependency.                                 |
 | [src/lua/config.lua](src/lua/config.lua)                                   | Standalone startup defaults; ignored when the ModSettings API is present.                              |
 
-Run `.\package.ps1` to create `dist/SetWeightLimit-0.4.0.zip`. The explicit five-file allowlist maps the three Lua files and declaration to their installation paths and generates an empty activation file. The README is not included in the archive. Packaging does not install the mod or launch the game.
+Run `.\package.ps1` to create `dist/SetWeightLimit-<version>.zip`. The explicit five-file allowlist maps the three Lua files and declaration to their installation paths and generates an empty activation file. The README is not included in the archive. Packaging does not install the mod or launch the game.
 
 Generated output in `.build` and `dist` is ignored by Git. Tests, captures and diagnostic tools remain outside this repository.
+
+## Automated releases
+
+`VERSION` is the authoritative packaging/release version, using `major.minor.patch` without a `v` prefix or leading zeroes. Update it when preparing a new release. Packaging reads this file to name `SetWeightLimit-<version>.zip`; release tooling is excluded from the ZIP.
+
+The **Release** GitHub Actions workflow runs on every push to `main`, or manually through **Actions → Release → Run workflow** with `main` selected. Other branches are skipped. It packages the triggering commit and publishes tag `v<version>`, title `SetWeightLimit <version>`, generated release notes and the installable ZIP. It uses the repository's automatic `GITHUB_TOKEN` with `contents: write`; no additional secret is required.
+
+If that tag already has a release, including a draft, the run succeeds without modifying the release or its assets. Runs are serialized without cancelling an active publication. A tag without a release can be reused only when it resolves to the triggering commit; conflicting tags are never moved.
+
+New releases stay in draft until the ZIP upload succeeds. If a run fails after draft creation, inspect the draft and workflow log manually. Later runs skip that draft rather than repairing it. After verifying a draft's tag and complete asset, publish it manually; otherwise remove the incomplete draft before retrying the same commit. API/permission failures fail the workflow rather than being treated as an absent release. Repository tag rules and Actions permissions must allow release creation.
