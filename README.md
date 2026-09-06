@@ -1,43 +1,67 @@
-# Set Weight Limit
+# SetWeightLimit 0.2.0
 
-SetWeightLimit 0.1.0 is a UE4SS Lua mod for **The Blood of Dawnwalker**. It sets the active local player's base carrying capacity to a configured value, default **400**. Trait bonuses remain additive: a +90 bonus gives a total of **490**.
+Set your character's **base carry capacity** through **Settings → Mods → Set Weight Limit**. The default is **400**, adjustable from **20–2000** in steps of **20**. Trait bonuses are added separately: a base of 400 with a 90-point bonus gives a total capacity of 490.
 
-## Install and configure
+Settings last for the current game session. Restarting the game restores the declaration defaults; in-game changes are not saved between sessions.
 
-1. Install the compatible Dawnwalker UE4SS **1.0.1-rc4** package separately. UE4SS must already use the `ue4ss/Mods` layout beside the game executable.
-2. Disable CarryWeightMultiplier and other mods that change carrying capacity, including player Blueprint capacity replacements.
-3. Extract `SetWeightLimit-0.1.0.zip` into the folder containing the actual game executable (normally `Dawnwalker/Binaries/Win64`). This creates `ue4ss/Mods/SetWeightLimit`; its empty `enabled.txt` activates the mod without replacing shared UE4SS files.
-4. With the game closed, edit `ue4ss/Mods/SetWeightLimit/scripts/config.lua`:
+## Installation and upgrades
 
-```lua
-return {
-    enabled = true,
-    weight_limit = 400,
-}
-```
+1. Install community **RC5 UE4SS** and [**ModSettings 0.1.0**](https://github.com/p-marques/dawnwalker_mod_settings). Both framework components, **ModSettings** and **ModSettingsBridge**, are required.
+2. Disable other carry-capacity mods, including CarryWeightMultiplier and mods that replace the player Blueprint to change capacity.
+3. Close the game and extract `SetWeightLimit-0.2.0.zip` beside `Dawnwalker.exe`, normally in `Dawnwalker/Binaries/Win64`.
+4. If upgrading from 0.1.0, remove `ue4ss/Mods/SetWeightLimit/scripts/config.lua`. Version 0.2.0 never reads this obsolete file.
 
-Restart the game after changing configuration. `weight_limit` must be a positive finite number within the float32 range (approximately `1.4013e-45` to `3.4028e38`); decimal settings are rounded to float32 storage precision. Invalid configuration makes no changes. Setting `enabled = false` registers no callbacks.
+The archive installs the Lua mod and its declaration at `ue4ss/Mods/ModSettings/definitions/SetWeightLimit.json`. It includes no UE4SS binaries or shared mod lists. If ModSettings is unavailable or the declaration is missing or invalid, SetWeightLimit logs an error and makes no capacity changes.
 
-The mod changes the authoritative base property used by native encumbrance calculations. Encumbrance may refresh on the next pickup, drop, or transfer. The configured value sets the base, so bonuses can increase the displayed total.
+## Using the controls
 
-To uninstall, close the game and remove only `ue4ss/Mods/SetWeightLimit`. To disable temporarily, set `enabled = false`. The underlying property write was observed to reset on restart and not serialize into saves in the original mod's validation.
+Open **Settings → Mods → Set Weight Limit** from the title screen or pause menu.
 
-## Compatibility
+| Control | Behavior |
+| --- | --- |
+| **Enable** | On by default. Turns the capacity override on or off. |
+| **Weight Limit** | Sets base capacity. Disabled while Enable is off; its selected value is retained. |
 
-This version targets Steam build **25129649** (UE **5.5.4**) with the community RC4 UE4SS setup used by CarryWeightMultiplier 0.2.0. The new mod has **not yet been validated in the game**; the original implementation's successful runtime tests are evidence for the inherited approach, not a new runtime acceptance result.
+Disabling restores the recorded original base only if no external change has replaced the value managed by SetWeightLimit. Re-enabling reapplies the selected weight through the same safeguards.
 
-Only the active local `BP_PlayerCharacter_C` inventory is eligible. The mod requires exactly one `WeightLimit` `FloatProperty` at offset `0x158`, starting at `200 +/- 0.01`. Unexpected values are left unchanged. After application, a detected reset to the original value is reapplied; another detected value stops management of that component.
+Changes made at the title screen apply when your character becomes available. Closing and reopening Settings retains the current session values. Encumbrance may need a pickup, drop or item transfer to refresh after a capacity change.
 
-Property writes use reflected `SetPropertyValue`, followed by property readback and native getter validation. Failed validation attempts restore the previous base. The mod uses construction notifications, up to eight component attempts 250 ms apart, one startup scan after five seconds, and LoadMap validation. There is no recurring scan. Startup, successful applications, and a bounded number of errors appear in the UE4SS log.
+## Changing startup defaults
 
-## Build a release
+With the game closed, edit `ue4ss/Mods/ModSettings/definitions/SetWeightLimit.json`:
 
-From this repository, run `powershell -NoProfile -ExecutionPolicy Bypass -File .\package.ps1`. The execution-policy override applies only to that process. The script creates `dist/SetWeightLimit-0.1.0.zip` and prints its size and SHA-256. The ZIP contains exactly:
+- In the setting with `"id": "enabled"`, set `"default"` to `true` or `false` without quotes.
+- In the setting with `"id": "weight_limit"`, set `"default"` to a number from **20 to 2000**, in multiples of **20**, such as `400` or `600`.
 
-```text
-ue4ss/Mods/SetWeightLimit/enabled.txt
-ue4ss/Mods/SetWeightLimit/scripts/main.lua
-ue4ss/Mods/SetWeightLimit/scripts/config.lua
-```
+Keep the setting IDs, types, range and step unchanged, and preserve valid JSON syntax. Restart the game to load the edited defaults. Editing these defaults is separate from saving in-game changes; automatic persistence is not implemented.
 
-The package script uses an explicit allowlist. Documentation, build tools, UE4SS, game assets, and diagnostic files are excluded. Building a release does not install the mod or launch the game.
+## Removal
+
+Close the game and remove only:
+
+- `ue4ss/Mods/SetWeightLimit`
+- `ue4ss/Mods/ModSettings/definitions/SetWeightLimit.json`
+
+Leave ModSettings and ModSettingsBridge installed for other mods that need them.
+
+## Compatibility and safeguards
+
+Targets game build **25129649**, Unreal Engine **5.5.4**, with community **RC5**. Unexpected existing capacity values are left unchanged. If another system changes a capacity value that SetWeightLimit manages, the mod stops managing that component instead of overwriting the external change.
+
+Capacity changes are checked against the game's reported result. Restoration and rollback require continued ownership of the value. A requested setting can therefore differ from the successfully applied capacity; application failures appear in the UE4SS log.
+
+Diagnostic testing verified title-screen and pause-menu controls, reopening, session retention, and live capacity changes, including disabling and re-enabling. Additive-bonus arithmetic passed offline checks, but no nonzero trait bonus was observed during live testing. Controller input remains untested.
+
+## Development and packaging
+
+The source layout separates implementation from installed paths:
+
+| Source | Responsibility |
+| --- | --- |
+| [src/lua/main.lua](src/lua/main.lua) | Connects to ModSettings, subscribes to changes and handles the UE4SS/player lifecycle. |
+| [src/lua/capacity.lua](src/lua/capacity.lua) | Validates requested capacity values and manages safe application, ownership, restoration and rollback. |
+| [src/definitions/SetWeightLimit.json](src/definitions/SetWeightLimit.json) | Declares controls, defaults, numeric bounds and the Enable dependency. |
+
+Run `.\package.ps1` to create `dist/SetWeightLimit-0.2.0.zip`. The explicit four-file allowlist maps the Lua files and declaration to their installation paths and generates an empty activation file. The README is not included in the archive. Packaging does not install the mod or launch the game.
+
+Generated output in `.build` and `dist` is ignored by Git. Tests, captures and diagnostic tools remain outside this repository.
